@@ -1,5 +1,9 @@
 # Bundle update log
 
+## 2026-10-19 — Trip date interaction correction (agent-authored)
+
+Reproduced the Chromium issue where clicking the date text focused the input without opening its calendar; the native calendar icon worked. Added explicit native-picker activation for clicks across each trip date field, retaining ordinary entry when the API is unavailable. Whole-trip protection chosen in a draft no longer disables the fields needed to complete it; saved protected trips still require explicit server unlock. Added a real native-calendar browser regression that saves independent synthetic Ryan/Lily Cozumel dates through the D1 fixture, reloads them, and checks saved protection. Updated production source guidance to the Cloudflare-connected `RyanCaldwell360/ryan-lily-travel-planner` import, retaining the original repository as a separate remote. Verification: 19 core/API/runtime tests, 4 browser workflows, strict TypeScript/build, and Wrangler deployment dry run passed. No production household data was used or changed during tests.
+
 ## 2026-10-17
 
 - **Creation**: Captured the product discovery interview as an OKF v0.2 knowledge bundle.

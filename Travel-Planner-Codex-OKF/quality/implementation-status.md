@@ -20,6 +20,12 @@ generated:
 
 # Evidence
 
+## Trip date correction — 2026-10-19
+
+Reproduced clicking the text of an empty trip date field in Chromium: it received focus, but the native calendar did not open and selecting with Enter left the date empty. The new regression failed against the imported production source at that exact interaction before the fix. With the fix, the same real click and Enter choose a date from the native calendar. The test then completes a protected synthetic Cozumel draft, saves Ryan and Lily with different arrival dates through the local Worker/D1 fixture, reloads, and confirms that both date ranges persisted and are now disabled behind explicit unlock. A browser without `showPicker` retains ordinary date entry without a JavaScript error.
+
+Current checks: **19 core/API/runtime tests and 4 Chromium browser workflows passed**, with no failed/skipped tests. Strict TypeScript/production build and Wrangler deployment dry run also passed. Existing PTO, independent-person accounting, per-day protections, and atomic D1 checks pass. Synthetic fixtures use isolated temporary databases; no live household data is changed by these tests. Safari/Firefox and the private production session have not been tested from this workspace.
+
 See the root `tests/` files for executable assertions, not just screenshots. `npm test` covers numerical acceptance A01–A10/A13/A15 edge cases and authenticated API persistence/concurrency (A11), plus synthetic adapter scope/cache tests (A12). `npm run build` runs strict TypeScript checking and the production bundle. `npm run test:browser` exercises the end-to-end year-planning workflow in two independent Chromium contexts, locks, map/list navigation, unavailable providers, setup visibility and mobile overflow. Screenshots are generated into `test-results/`.
 
 The demonstration starts from 40 synthetic Ryan opening hours, explicit 8-hour credits on Feb–Dec 1, and protected November/December leave. Adding five February weekdays yields a first 8-hour deficit on Dec 6 and a 16-hour ending deficit. Removing Sep 10 and Oct 8 flexible participation frees 8 hours each, ending at 0 hours without any negative closing balance. The original plan remains unchanged; Lily can open the saved named alternative and save non-trip leave visible to Ryan after reload.

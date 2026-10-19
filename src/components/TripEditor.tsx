@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import {
   type Trip,
   type State,
@@ -15,6 +15,15 @@ import { Modal } from './Modal';
 import { ForecastCards } from './Forecast';
 import { Lock, Unlock, Trash2, Info } from 'lucide-react';
 import { EvidencePanel } from './Evidence';
+function openDatePicker(event: MouseEvent<HTMLInputElement>) {
+  const input = event.currentTarget;
+  try {
+    input.showPicker?.();
+  } catch {
+    // Native date entry remains available when a browser cannot open its picker.
+    input.focus();
+  }
+}
 export function TripEditor({
   initial,
   state,
@@ -45,6 +54,9 @@ export function TripEditor({
         },
   );
   const [error, setError] = useState('');
+  // Protection on a draft takes effect on save; only a previously saved lock
+  // makes the editor read-only and requires the explicit server unlock action.
+  const savedLocked = !!initial?.locked;
   const [ranges, setRanges] = useState<Record<PersonId, { start: string; end: string }>>(
     () =>
       Object.fromEntries(
@@ -133,7 +145,7 @@ export function TripEditor({
             <input
               placeholder="Give this possibility a name"
               value={trip.title}
-              disabled={trip.locked}
+              disabled={savedLocked}
               onChange={(e) => setTrip({ ...trip, title: e.target.value })}
             />
           </label>
@@ -141,7 +153,7 @@ export function TripEditor({
             Destination
             <select
               value={trip.destination}
-              disabled={trip.locked}
+              disabled={savedLocked}
               onChange={(e) => setTrip({ ...trip, destination: e.target.value })}
             >
               {destinations.map((d) => (
@@ -170,6 +182,12 @@ export function TripEditor({
             </button>
           )}
         </div>
+        {trip.locked && !savedLocked && (
+          <p className="notice small">
+            Trip protection takes effect when you save. Finish choosing your dates and reviewing PTO
+            first.
+          </p>
+        )}
         <div className="notice small">
           <Info size={16} />
           <span>
@@ -187,7 +205,7 @@ export function TripEditor({
                   type="checkbox"
                   checked={!!part}
                   disabled={
-                    trip.locked ||
+                    savedLocked ||
                     !!initial?.participants
                       .find((p) => p.person === person)
                       ?.days.some((d) => d.locked)
@@ -212,7 +230,8 @@ export function TripEditor({
                       <input
                         type="date"
                         value={ranges[person].start}
-                        disabled={trip.locked}
+                        disabled={savedLocked}
+                        onClick={openDatePicker}
                         onChange={(e) => range(person, 'start', e.target.value)}
                       />
                     </label>
@@ -221,7 +240,8 @@ export function TripEditor({
                       <input
                         type="date"
                         value={ranges[person].end}
-                        disabled={trip.locked}
+                        disabled={savedLocked}
+                        onClick={openDatePicker}
                         onChange={(e) => range(person, 'end', e.target.value)}
                       />
                     </label>
@@ -255,7 +275,7 @@ export function TripEditor({
                               <select
                                 aria-label={`${nameOf(person)} ${d.date} treatment`}
                                 value={d.kind}
-                                disabled={trip.locked || d.locked}
+                                disabled={savedLocked || d.locked}
                                 onChange={(e) =>
                                   day(person, d.date, {
                                     kind: e.target.value as Day['kind'],
@@ -278,7 +298,7 @@ export function TripEditor({
                                 step="0.0001"
                                 value={d.hours}
                                 disabled={
-                                  trip.locked || d.locked || d.kind !== 'pto' || !weekday(d.date)
+                                  savedLocked || d.locked || d.kind !== 'pto' || !weekday(d.date)
                                 }
                                 onChange={(e) => day(person, d.date, { hours: e.target.value })}
                               />
@@ -287,7 +307,7 @@ export function TripEditor({
                               <select
                                 aria-label={`${nameOf(person)} ${d.date} usage`}
                                 value={d.status}
-                                disabled={trip.locked || d.locked}
+                                disabled={savedLocked || d.locked}
                                 onChange={(e) =>
                                   day(person, d.date, { status: e.target.value as Day['status'] })
                                 }
@@ -303,7 +323,7 @@ export function TripEditor({
                                 ?.days.find((x) => x.date === d.date)?.locked ? (
                                 <button
                                   className="text-button"
-                                  disabled={trip.locked}
+                                  disabled={savedLocked}
                                   onClick={() => onUnlock(initial, person, d.date)}
                                 >
                                   <Unlock size={13} />
@@ -315,7 +335,7 @@ export function TripEditor({
                                     aria-label={`Protect ${nameOf(person)} ${d.date}`}
                                     type="checkbox"
                                     checked={d.locked}
-                                    disabled={trip.locked}
+                                    disabled={savedLocked}
                                     onChange={(e) =>
                                       day(person, d.date, { locked: e.target.checked })
                                     }
@@ -338,7 +358,7 @@ export function TripEditor({
           Journal notes
           <textarea
             value={trip.note}
-            disabled={trip.locked}
+            disabled={savedLocked}
             onChange={(e) => setTrip({ ...trip, note: e.target.value })}
             placeholder="What are we looking forward to?"
           />
@@ -364,7 +384,7 @@ export function TripEditor({
         {initial && (
           <button
             className="danger secondary"
-            disabled={trip.locked || trip.participants.some((p) => p.days.some((d) => d.locked))}
+            disabled={savedLocked || trip.participants.some((p) => p.days.some((d) => d.locked))}
             onClick={() => preview(true)}
           >
             <Trash2 size={15} />

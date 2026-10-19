@@ -36,6 +36,12 @@ Travel presence, PTO hours, and lock state are distinct fields. Useful editor ch
 
 Confirmed: entire trips and specific days can be unalterable. Proposed representation supports a trip lock plus participant-day locks. A protected travel day can be a zero-PTO remote-work day; it must still be protected against date changes. Protect both the presence and leave classification unless the user explicitly unlocks it. Making a trip shorter must not implicitly drop protected interior dates. Moving an entire trip respects every locked component.
 
+### Implemented editor behavior — 2026-10-19
+
+Clicking an arrival or departure field opens the browser's native calendar where `showPicker` is supported. Ordinary date entry remains available when that API is absent or unavailable. Ryan's and Lily's dates remain independent.
+
+Selecting whole-trip protection in an unsaved draft records the intended protection without disabling the fields needed to finish the trip. Protection takes effect after the explicit preview/save. A trip that was already saved as protected remains read-only and requires the existing explicit server unlock action; day locks and server validation still apply.
+
 ## Overlap
 
 Two trips on one person's same calendar day must not consume 16 hours. Recommended behavior: flag the conflict and request an explicit resolution, retaining one canonical person-date PTO allocation. Do not silently hide incompatible locations. Different people may be in different places on the same date.

@@ -247,3 +247,73 @@ test('free Cloudflare deployment: signed email identities share and edit a named
   await page.screenshot({ path: 'test-results/cloudflare-shared-year.png', fullPage: true });
   await other.close();
 });
+
+test('Cozumel dates open from the field, save independently, and lock only after saving', async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('http://127.0.0.1:3200/__fixture/login?person=ryan');
+  await page.getByLabel('Planning year', { exact: true }).fill('2029');
+  await page.getByRole('button', { name: 'Create 2029 plan', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .last()
+    .getByRole('button', { name: 'Save changes', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Add a trip', exact: true }).click();
+  const editor = page.getByRole('dialog').last();
+  await editor.getByLabel('Ryan is traveling').check();
+  const arrival = editor.getByLabel('Ryan arrives');
+  // Click the date text, away from the browser's small calendar icon, and choose
+  // its highlighted date with Enter. This must exercise the real native picker.
+  await arrival.click({ position: { x: 18, y: 20 } });
+  await page.keyboard.press('Enter');
+  await expect(arrival).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+  await expect(editor).toBeVisible();
+
+  await editor.getByLabel('Protect this whole trip').check();
+  await editor.getByLabel('Trip name').fill('Cozumel date selection · synthetic');
+  await editor.getByLabel('Destination').selectOption('cozumel');
+  await expect(arrival).toBeEnabled();
+  await arrival.fill('2029-06-04');
+  await editor.getByLabel('Ryan departs').fill('2029-06-08');
+  await editor.getByLabel('Lily is traveling').check();
+  // Older browsers without showPicker must retain ordinary date entry.
+  await page.evaluate(() => {
+    Object.defineProperty(HTMLInputElement.prototype, 'showPicker', {
+      configurable: true,
+      value: undefined,
+    });
+  });
+  await editor.getByLabel('Lily arrives').click();
+  await editor.getByLabel('Lily arrives').fill('2029-06-06');
+  await editor.getByLabel('Lily departs').fill('2029-06-08');
+  await expect(editor.locator('.days-table tbody tr')).toHaveCount(8);
+  await editor.getByRole('button', { name: 'Preview year impact' }).click();
+  await page
+    .getByRole('dialog')
+    .last()
+    .getByRole('button', { name: 'Save changes', exact: true })
+    .click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  await page.reload();
+  await page.getByLabel('Planning year', { exact: true }).fill('2029');
+  await page
+    .getByRole('button', { name: /Cozumel date selection · synthetic/ })
+    .first()
+    .click();
+  const saved = page.getByRole('dialog').last();
+  for (const [label, value] of [
+    ['Ryan arrives', '2029-06-04'],
+    ['Ryan departs', '2029-06-08'],
+    ['Lily arrives', '2029-06-06'],
+    ['Lily departs', '2029-06-08'],
+  ]) {
+    await expect(saved.getByLabel(label)).toHaveValue(value);
+    await expect(saved.getByLabel(label)).toBeDisabled();
+  }
+  await expect(saved.getByRole('button', { name: 'Explicitly unlock trip' })).toBeVisible();
+  expect(errors).toEqual([]);
+});

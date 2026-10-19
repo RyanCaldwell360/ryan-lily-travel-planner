@@ -1337,6 +1337,9 @@ select {
   font-size: 14px;
   font-weight: 550;
 }
+.participant input[type='date']:not(:disabled) {
+  cursor: pointer;
+}
 .days-table input,
 .days-table select {
   font-size: 10px;

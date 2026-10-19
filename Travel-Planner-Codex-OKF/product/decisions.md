@@ -20,6 +20,12 @@ evidence_class: mixed
 
 Confirmed: laptop-first; both can edit; persistent shared storage; one shared plan plus named alternatives; individual day treatment; year-end horizon; no mandatory PTO cushion; manual balance correction; MSP origin; sourced flight/lodging estimates; weather; maps; family break highlights; user judges affordability and trip worth.
 
+## Trip date interaction — 2026-10-19 (implementation correction)
+
+Clicking the body of an arrival/departure field opens its native date picker when supported, with ordinary date entry retained as a fallback. New whole-trip protection takes effect on explicit save, so choosing protection cannot prevent the user from completing a draft. Previously saved protected trips still require the explicit server unlock action. These changes do not relax the PTO ledger, independent traveler dates, or server lock validation.
+
+The connected production source is `RyanCaldwell360/ryan-lily-travel-planner`, the Cloudflare-created import of the original repository. Bug fixes must be based on and delivered to that repository, preserving its pinned D1 binding and dashboard runtime variables. Public sign-in routing has been observed; private remote planner behavior cannot be verified without an authorized user's session.
+
 ## Tentative employer information
 
 Ryan believes both receive about five weeks per year and can roll over 40 hours. This is **not verified**. Five 40-hour weeks would be 200 hours annually, but annual hours do not determine an exact payroll credit schedule. Do not hardcode 200/26 or assume biweekly payroll.
